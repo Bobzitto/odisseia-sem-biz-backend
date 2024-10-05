@@ -7,12 +7,12 @@ import (
 )
 
 func registerRoutes(e *echo.Echo) {
-	e.GET("/", loginHandler)
+	//e.GET("/", loginHandler)
 	e.GET("/home", homeHandler)
-	e.GET("/home/aulas", aulasHandler)
-	e.GET("/home/turmas", turmasHandler)
-	e.POST("/home/turmas/0/edit", criaTurmaHandler)
-	e.POST("/home/aulas/0/edit", criaAulaHandler)
+	//e.GET("/home/aulas", aulasHandler)
+	//e.GET("/home/turmas", turmasHandler)
+	//e.POST("/home/turmas/0/edit", criaTurmaHandler)
+	//e.POST("/home/aulas/0/edit", criaAulaHandler)
 
 }
 
