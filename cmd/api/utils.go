@@ -8,6 +8,12 @@ import (
 	"github.com/labstack/echo"
 )
 
+type JSONResponse struct {
+	Error   bool        `json:"error"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
 func (app *application) WriteJSON(c echo.Context, status int, data interface{}, headers ...http.Header) error {
 	//set content type
 	c.Response().Header().Set("Content-Type", "application/json")
@@ -41,4 +47,18 @@ func (app *application) ReadJSON(c echo.Context, dst interface{}) error {
 	}
 
 	return nil
+}
+
+func (app *application) errorJSON(c echo.Context, err error, status ...int) error {
+	statusCode := http.StatusBadRequest
+
+	if len(status) > 0 {
+		statusCode = status[0]
+	}
+
+	var payload JSONResponse
+	payload.Error = true
+	payload.Message = err.Error()
+
+	return app.WriteJSON(c, statusCode, payload)
 }

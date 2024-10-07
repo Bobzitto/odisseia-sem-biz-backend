@@ -1,4 +1,3 @@
-
 --
 -- PostgreSQL database dump
 --
@@ -21,66 +20,118 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
---
--- Name: genres; Type: TABLE; Schema: public; Owner: -
+-- 
+-- Name: turmas; type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.genres (
+CREATE TABLE public.turmas (
     id integer NOT NULL,
-    genre character varying(255),
+    name character varying(255) NOT NULL,
+    school character varying(255) NOT NULL,
+    year character varying(255) NOT NULL,
+    created_at timestamp without time zone NOT NULL DEFAULT now(),
+    updated_at timestamp without time zone NULL
+);
+
+--
+-- 
+--
+ALTER TABLE public.turmas ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.turmas_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+-- 
+-- Name: aulas; type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.aulas (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    size character varying(255) NOT NULL,
+    active boolean NOT NULL,
+    review numeric NOT NULL,
+    created_at timestamp without time zone NOT NULL DEFAULT now(),
+    updated_at timestamp without time zone NULL
+);
+
+COPY public.aulas (id, name, size, active, review, created_at, updated_at) FROM stdin;
+1	Regra de 3 Simples	4	true	4.5	2022-09-23 00:00:00	2022-09-23 00:00:00 
+2	Termodinâmica	7	true	5	2022-09-23 00:00:00	2022-09-23 00:00:00
+3	Sinônimos	5	true	4	2022-09-23 00:00:00	2022-09-23 00:00:00
+4	Segunda Guerra Mundial	5	true	2.8	2022-09-23 00:00:00	2022-09-23 00:00:00
+5	Tigres Asiáticas	4	false	3.8	2022-09-23 00:00:00	2022-09-23 00:00:00
+6	Verb To Be	7	true	4.3	2022-09-23 00:00:00	2022-09-23 00:00:00
+\.
+
+--
+-- 
+--
+ALTER TABLE public.aulas ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.aulas_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+ALTER TABLE ONLY public.aulas
+    ADD CONSTRAINT aulas_pkey PRIMARY KEY (id);
+--
+-- Name: materias; type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.materias (
+    id integer NOT NULL,
+    materia character varying(255),
     created_at timestamp without time zone,
     updated_at timestamp without time zone
 );
 
-
 --
--- Name: genres_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
+-- Fix duplicate id issue: remove or change the duplicate entry
+-- You can use the following command to remove the duplicate with id = 8
+-- DELETE FROM public.materias WHERE id = 8;
 
-ALTER TABLE public.genres ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.genres_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+-- 
+-- Ensure the following COPY command has unique IDs
+COPY public.materias (id, materia, created_at, updated_at) FROM stdin;
+1	Física	2022-09-23 00:00:00	2022-09-23 00:00:00
+2	Matemática	2022-09-23 00:00:00	2022-09-23 00:00:00
+3	Português	2022-09-23 00:00:00	2022-09-23 00:00:00
+4	História	2022-09-23 00:00:00	2022-09-23 00:00:00
+5	Geografia	2022-09-23 00:00:00	2022-09-23 00:00:00
+6	Sociologia	2022-09-23 00:00:00	2022-09-23 00:00:00
+7	Inglês	2022-09-23 00:00:00	2022-09-23 00:00:00
+8	Filosofia	2022-09-23 00:00:00	2022-09-23 00:00:00
+9	Artes	2022-09-23 00:00:00	2022-09-23 00:00:00
+\.
 
+ALTER TABLE ONLY public.materias
+    ADD CONSTRAINT materias_pkey PRIMARY KEY (id);
 
---
--- Name: movies; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.movies (
+CREATE TABLE public.aulas_materias (
     id integer NOT NULL,
-    title character varying(512),
-    release_date date,
-    runtime integer,
-    mpaa_rating character varying(10),
-    description text,
-    image character varying(255),
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
+    aula_id integer,
+    materia_id integer
 );
 
+COPY public.aulas_materias (id, aula_id, materia_id) FROM stdin;
+1	1	2
+2	2	1
+3	3	3
+4	4	4
+5	5	5
+6	6	7
+\.
 
---
--- Name: movies_genres; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.movies_genres (
-    id integer NOT NULL,
-    movie_id integer,
-    genre_id integer
-);
-
-
---
--- Name: movies_genres_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-ALTER TABLE public.movies_genres ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.movies_genres_id_seq
+ALTER TABLE public.aulas_materias ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.aulas_materias_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -88,22 +139,16 @@ ALTER TABLE public.movies_genres ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTIT
     CACHE 1
 );
 
+ALTER TABLE ONLY public.aulas_materias
+    ADD CONSTRAINT aulas_materias_pkey PRIMARY KEY (id);
 
---
--- Name: movies_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
+ALTER TABLE ONLY public.aulas_materias
+    ADD CONSTRAINT aulas_materias_materia_id_fkey FOREIGN KEY (materia_id) REFERENCES public.materias(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE public.movies ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.movies_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+ALTER TABLE ONLY public.aulas_materias
+    ADD CONSTRAINT aulas_materias_aula_id_fkey FOREIGN KEY (aula_id) REFERENCES public.aulas(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
-
---
+-- 
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -117,11 +162,9 @@ CREATE TABLE public.users (
     updated_at timestamp without time zone
 );
 
-
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- 
 --
-
 ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.users_id_seq
     START WITH 1
@@ -131,54 +174,10 @@ ALTER TABLE public.users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     CACHE 1
 );
 
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
---
--- Data for Name: genres; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.genres (id, genre, created_at, updated_at) FROM stdin;
-1	Comedy	2022-09-23 00:00:00	2022-09-23 00:00:00
-2	Sci-Fi	2022-09-23 00:00:00	2022-09-23 00:00:00
-3	Horror	2022-09-23 00:00:00	2022-09-23 00:00:00
-4	Romance	2022-09-23 00:00:00	2022-09-23 00:00:00
-5	Action	2022-09-23 00:00:00	2022-09-23 00:00:00
-6	Thriller	2022-09-23 00:00:00	2022-09-23 00:00:00
-7	Drama	2022-09-23 00:00:00	2022-09-23 00:00:00
-8	Mystery	2022-09-23 00:00:00	2022-09-23 00:00:00
-9	Crime	2022-09-23 00:00:00	2022-09-23 00:00:00
-10	Animation	2022-09-23 00:00:00	2022-09-23 00:00:00
-11	Adventure	2022-09-23 00:00:00	2022-09-23 00:00:00
-12	Fantasy	2022-09-23 00:00:00	2022-09-23 00:00:00
-13	Superhero	2022-09-23 00:00:00	2022-09-23 00:00:00
-\.
-
-
---
--- Data for Name: movies; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.movies (id, title, release_date, runtime, mpaa_rating, description, image, created_at, updated_at) FROM stdin;
-1	Highlander	1986-03-07	116	R	He fought his first battle on the Scottish Highlands in 1536. He will fight his greatest battle on the streets of New York City in 1986. His name is Connor MacLeod. He is immortal.	/8Z8dptJEypuLoOQro1WugD855YE.jpg	2022-09-23 00:00:00	2022-09-23 00:00:00
-2	Raiders of the Lost Ark	1981-06-12	115	PG-13	Archaeology professor Indiana Jones ventures to seize a biblical artefact known as the Ark of the Covenant. While doing so, he puts up a fight against Renee and a troop of Nazis.	/ceG9VzoRAVGwivFU403Wc3AHRys.jpg	2022-09-23 00:00:00	2022-09-23 00:00:00
-3	The Godfather	1972-03-24	175	18A	The aging patriarch of an organized crime dynasty in postwar New York City transfers control of his clandestine empire to his reluctant youngest son.	/3bhkrj58Vtu7enYsRolD1fZdja1.jpg	2022-09-23 00:00:00	2022-09-23 00:00:00
-\.
-
-
---
--- Data for Name: movies_genres; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.movies_genres (id, movie_id, genre_id) FROM stdin;
-1	1	5
-2	1	12
-3	2	5
-4	2	11
-5	3	9
-6	3	7
-\.
-
-
---
+-- 
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -186,84 +185,16 @@ COPY public.users (id, first_name, last_name, email, password, created_at, updat
 1	Admin	User	admin@example.com	$2a$14$wVsaPvJnJJsomWArouWCtusem6S/.Gauq/GjOIEHpyh2DAMmso1wy	2022-09-23 00:00:00	2022-09-23 00:00:00
 \.
 
-
---
--- Name: genres_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.genres_id_seq', 13, true);
-
-
---
--- Name: movies_genres_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- 
+-- Data for Name: turmas; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.movies_genres_id_seq', 6, true);
-
-
---
--- Name: movies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.movies_id_seq', 3, true);
-
-
---
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.users_id_seq', 1, true);
-
-
---
--- Name: genres genres_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.genres
-    ADD CONSTRAINT genres_pkey PRIMARY KEY (id);
-
-
---
--- Name: movies_genres movies_genres_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.movies_genres
-    ADD CONSTRAINT movies_genres_pkey PRIMARY KEY (id);
-
-
---
--- Name: movies movies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.movies
-    ADD CONSTRAINT movies_pkey PRIMARY KEY (id);
-
-
---
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: movies_genres movies_genres_genre_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.movies_genres
-    ADD CONSTRAINT movies_genres_genre_id_fkey FOREIGN KEY (genre_id) REFERENCES public.genres(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: movies_genres movies_genres_movie_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.movies_genres
-    ADD CONSTRAINT movies_genres_movie_id_fkey FOREIGN KEY (movie_id) REFERENCES public.movies(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- PostgreSQL database dump complete
---
+COPY public.turmas (id, name, school, year, created_at, updated_at) FROM stdin;
+1	405	E.M. Porra Flávio	4o ano	2022-09-23 00:00:00	2022-09-23 00:00:00
+2	712	E.M. Porra Flávio	7o ano	2022-09-23 00:00:00	2022-09-23 00:00:00
+3	5o ano do barulho	CEPT Treinamento Presencial	5o ano	2022-09-23 00:00:00	2022-09-23 00:00:00
+4	Turminha 201	CEPT Treinamento Presencial	2o ano	2022-09-23 00:00:00	2022-09-23 00:00:00
+5	9D	CEPT Treinamento Presencial	9o ano	2022-09-23 00:00:00	2022-09-23 00:00:00
+6	313	Escola Implantação	3o ano	2022-09-23 00:00:00	2022-09-23 00:00:00
+\.
 

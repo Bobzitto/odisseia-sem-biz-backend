@@ -17,8 +17,8 @@ func (app *application) routes() *echo.Echo {
 	// Use CORS middleware (or any other custom middleware)
 
 	// Unprotected route
-	//e.GET("/", loginHandler)
-
+	e.POST("/authenticate", app.authenticate)
+	e.GET("/refresh", app.refreshToken)
 	// Protected routes group
 	//protected := e.Group("/home")
 	//protected.Use(app.AuthRequired)
