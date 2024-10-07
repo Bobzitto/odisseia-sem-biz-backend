@@ -6,8 +6,6 @@ import (
 	"flag"
 	"log"
 	"time"
-
-	"github.com/labstack/echo"
 )
 
 type application struct {
@@ -26,7 +24,7 @@ func main() {
 	var app application
 
 	//read from cmd line
-	flag.StringVar(&app.DSN, "dsn", "host=localhost port=5432 user=admin password=admin dbname=odisseia sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
+	flag.StringVar(&app.DSN, "dsn", "host=localhost port=5433 user=admin password=admin dbname=odisseia sslmode=disable timezone=UTC connect_timeout=5", "Postgres connection string")
 	flag.StringVar(&app.JWTSecret, "jwt-secret", "verysecret", "signing secret")
 	flag.StringVar(&app.JWTIssuer, "jwt-issuer", "example.com", "signing issuer")
 	flag.StringVar(&app.JWTAudience, "jwt-audience", "example.com", "signing audience")
@@ -55,10 +53,7 @@ func main() {
 	}
 
 	//new instance
-	e := echo.New()
-
-	//middleware
-	SetupMiddleware(e)
+	e := app.routes()
 
 	//server on port 8081
 	e.Logger.Fatal(e.Start(":8081"))
