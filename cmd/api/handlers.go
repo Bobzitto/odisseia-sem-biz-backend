@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo"
@@ -181,12 +182,20 @@ func (app *application) TodasMaterias(c echo.Context) error {
 }
 
 func (app *application) InserirAula(c echo.Context) error {
+	log.Println("inseriraula endpoint hit")
 	var aula models.Aula
 
 	err := c.Bind(&aula)
 	if err != nil {
+		log.Printf("bind error: %v\n", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid"})
 	}
+
+	var materiasID []int 
+	for _, materia := range aula.Materias {
+		materiasID = append(materiasID, materia.ID)
+	}
+	log.Printf("Materias IDs to insert: %v", materiasID)
 
 	//materia
 	newID, err := app.DB.InserirAula(aula)
@@ -194,7 +203,7 @@ func (app *application) InserirAula(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "problem making request"})
 	}
 
-	err = app.DB.AtualizarMateria(newID, aula.MateriasArray)
+	err = app.DB.AtualizarMateria(newID, materiasID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "error"})
 	}
@@ -204,5 +213,41 @@ func (app *application) InserirAula(c echo.Context) error {
 		Message: "matéria atualizada",
 	}
 
+	return c.JSON(http.StatusAccepted, resp)
+}
+
+func (app *application) AtualizarAula(c echo.Context) error {
+	var payload models.Aula
+
+	err := c.Bind(payload)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	aula, err := app.DB.UmaAula(payload.ID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	aula.Name = payload.Name
+	aula.Size = payload.Size
+	aula.Active = payload.Active
+	aula.Review = payload.Review
+	aula.UpdatedAt = time.Now()
+
+	err = app.DB.AtualizarAula(*aula)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	err = app.DB.AtualizarMateria(aula.ID, payload.MateriasArray)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	resp := JSONResponse{
+		Error:   false,
+		Message: "movie updated",
+	}
 	return c.JSON(http.StatusAccepted, resp)
 }

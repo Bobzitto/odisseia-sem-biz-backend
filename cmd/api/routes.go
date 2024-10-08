@@ -26,6 +26,7 @@ func (app *application) routes() *echo.Echo {
 	protected.Use(app.AuthRequired)
 	protected.GET("/aulas", app.TodasAulas)
 	protected.PUT("/aulas/0", app.InserirAula)
+	protected.PATCH("/aulas/{id}", app.AtualizarAula)
 	protected.GET("/aulas/{id}", app.EditarAula)
 
 	return e

@@ -38,7 +38,7 @@ CREATE TABLE public.turmas (
 --
 ALTER TABLE public.turmas ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.turmas_id_seq
-    START WITH 1
+    START WITH 7
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
@@ -73,7 +73,7 @@ COPY public.aulas (id, name, size, active, review, created_at, updated_at) FROM 
 --
 ALTER TABLE public.aulas ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.aulas_id_seq
-    START WITH 1
+    START WITH 7
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
@@ -132,7 +132,7 @@ COPY public.aulas_materias (id, aula_id, materia_id) FROM stdin;
 
 ALTER TABLE public.aulas_materias ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME public.aulas_materias_id_seq
-    START WITH 1
+    START WITH 7
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
@@ -197,4 +197,3 @@ COPY public.turmas (id, name, school, year, created_at, updated_at) FROM stdin;
 5	9D	CEPT Treinamento Presencial	9o ano	2022-09-23 00:00:00	2022-09-23 00:00:00
 6	313	Escola Implantação	3o ano	2022-09-23 00:00:00	2022-09-23 00:00:00
 \.
-

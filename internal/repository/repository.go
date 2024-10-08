@@ -15,4 +15,5 @@ type DatabaseRepo interface {
 	InserirAula(aula models.Aula) (int, error)
 	TodasMaterias() ([]*models.Materia, error)
 	AtualizarMateria(id int, materiasID []int) error
+	AtualizarAula(aula models.Aula) error
 }

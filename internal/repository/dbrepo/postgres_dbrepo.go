@@ -4,6 +4,7 @@ import (
 	"backend/internal/models"
 	"context"
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -344,19 +345,44 @@ func (a *PostgresDBRepo) AtualizarMateria(id int, materiasID []int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
+	log.Printf("Deleting existing materias for aula_id = %d", id)
 	stmt := `delete from aulas_materias where aula_id = $1`
 
 	_, err := a.DB.ExecContext(ctx, stmt, id)
 	if err != nil {
+		log.Printf("Error deleting materias: %v", err)
 		return err
 	}
 
+	log.Printf("Inserting new materias for aula_id = %d: %v", id, materiasID)
 	for _, n := range materiasID {
 		stmt := `insert into aulas_materias	(aula_id, materia_id) values ($1, $2)`
 		_, err := a.DB.ExecContext(ctx, stmt, id, n)
 		if err != nil {
+			log.Printf("Error inserting into aulas_materias: %v", err)
 			return err
 		}
+	}
+	return nil
+}
+
+func (a *PostgresDBRepo) AtualizarAula(aula models.Aula) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `update aulas set name=$1, size=$2, active=$3, review=$4,
+			updated_at=$5 where id = $6`
+
+	_, err := a.DB.ExecContext(ctx, stmt,
+		aula.Name,
+		aula.Size,
+		aula.Active,
+		aula.Review,
+		aula.UpdatedAt,
+		aula.ID,
+	)
+	if err != nil {
+		return err
 	}
 	return nil
 }
