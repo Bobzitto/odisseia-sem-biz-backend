@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/internal/models"
 	"errors"
 	"log"
 	"net/http"
@@ -107,4 +108,101 @@ func (app *application) logOut(c echo.Context) error {
 	c.SetCookie(expiredCookie)
 
 	return c.NoContent(http.StatusAccepted)
+}
+
+func (app *application) TodasAulas(c echo.Context) error {
+	aulas, err := app.DB.TodaAula()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "error fetching auals"})
+
+	}
+	return c.JSON(http.StatusOK, aulas)
+}
+
+func (app *application) ListaAulas(c echo.Context) error {
+	aulas, err := app.DB.TodaAula()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+
+	}
+
+	return c.JSON(http.StatusOK, aulas)
+}
+
+func (app *application) PegarAula(c echo.Context) error {
+	id := c.Param("id")
+
+	//convert id to int
+	aulaID, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID de aula inválido"})
+	}
+
+	//fetch aula from db
+	aula, err := app.DB.UmaAula(aulaID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, aula)
+}
+
+func (app *application) EditarAula(c echo.Context) error {
+	id := c.Param("id")
+
+	aulaID, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID de aula invalido"})
+	}
+
+	aula, materias, err := app.DB.EditarUmaAula(aulaID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	var payload = struct {
+		Aula     *models.Aula      `json:"aula"`
+		Materias []*models.Materia `json:"materias"`
+	}{
+		aula,
+		materias,
+	}
+
+	return c.JSON(http.StatusOK, payload)
+}
+
+func (app *application) TodasMaterias(c echo.Context) error {
+	materias, err := app.DB.TodasMaterias()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Matéria invalida"})
+	}
+
+	return c.JSON(http.StatusOK, materias)
+}
+
+func (app *application) InserirAula(c echo.Context) error {
+	var aula models.Aula
+
+	err := c.Bind(&aula)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid"})
+	}
+
+	//materia
+	newID, err := app.DB.InserirAula(aula)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "problem making request"})
+	}
+
+	err = app.DB.AtualizarMateria(newID, aula.MateriasArray)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "error"})
+	}
+
+	resp := JSONResponse{
+		Error:   false,
+		Message: "matéria atualizada",
+	}
+
+	return c.JSON(http.StatusAccepted, resp)
 }

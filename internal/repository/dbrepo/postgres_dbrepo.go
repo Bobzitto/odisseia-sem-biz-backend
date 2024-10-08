@@ -75,22 +75,28 @@ func (a *PostgresDBRepo) TodaAula() ([]*models.Aula, error) {
 
 	query := `
 		select
-			id, name, size, active, review, created_at, updated_at
+			a.id, a.name, a.size, a.active, a.review, a.created_at, a.updated_at, 
+			m.id as materia_id, m.materia as materia_name
 		from
-			aulas
+			aulas a
+		left join aulas_materias am on am.aula_id = a.id
+		left join materias m on am.materia_id = m.id
 		order by
-			name
-		`
+			a.name
+	`
 	rows, err := a.DB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var aulas []*models.Aula
+	var aulasMap = make(map[int]*models.Aula)
 
 	for rows.Next() {
 		var aula models.Aula
+		var materiaID int
+		var materiaName string
+
 		err := rows.Scan(
 			&aula.ID,
 			&aula.Name,
@@ -99,12 +105,32 @@ func (a *PostgresDBRepo) TodaAula() ([]*models.Aula, error) {
 			&aula.Review,
 			&aula.CreatedAt,
 			&aula.UpdatedAt,
+			&materiaID,
+			&materiaName,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		aulas = append(aulas, &aula)
+		if existingAula, exists := aulasMap[aula.ID]; exists {
+			existingAula.Materias = append(existingAula.Materias, &models.Materia{
+				ID:      materiaID,
+				Materia: materiaName,
+			})
+		} else {
+			aula.Materias = []*models.Materia{
+				{
+					ID:      materiaID,
+					Materia: materiaName,
+				},
+			}
+			aulasMap[aula.ID] = &aula
+		}
+	}
+
+	var aulas []*models.Aula
+	for _, aula := range aulasMap {
+		aulas = append(aulas, aula)
 	}
 	return aulas, nil
 }
@@ -285,11 +311,11 @@ func (a *PostgresDBRepo) TodasMaterias() ([]*models.Materia, error) {
 
 		materias = append(materias, &m)
 	}
-	
+
 	return materias, nil
 }
 
-func (a *PostgresDBRepo) InserirAula(aula models.Aula) (int, error){
+func (a *PostgresDBRepo) InserirAula(aula models.Aula) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
@@ -298,7 +324,7 @@ func (a *PostgresDBRepo) InserirAula(aula models.Aula) (int, error){
 
 	var newID int
 
-	err := a.DB.QueryRowContext(ctx, stmt, 
+	err := a.DB.QueryRowContext(ctx, stmt,
 		aula.Name,
 		aula.Size,
 		aula.Active,
@@ -312,4 +338,25 @@ func (a *PostgresDBRepo) InserirAula(aula models.Aula) (int, error){
 	}
 
 	return newID, nil
+}
+
+func (a *PostgresDBRepo) AtualizarMateria(id int, materiasID []int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `delete from aulas_materias where aula_id = $1`
+
+	_, err := a.DB.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return err
+	}
+
+	for _, n := range materiasID {
+		stmt := `insert into aulas_materias	(aula_id, materia_id) values ($1, $2)`
+		_, err := a.DB.ExecContext(ctx, stmt, id, n)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
