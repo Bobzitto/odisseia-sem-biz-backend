@@ -16,4 +16,5 @@ type DatabaseRepo interface {
 	TodasMaterias() ([]*models.Materia, error)
 	AtualizarMateria(id int, materiasID []int) error
 	AtualizarAula(aula models.Aula) error
+	DeleteAula(id int) error
 }

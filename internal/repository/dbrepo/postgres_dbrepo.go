@@ -386,3 +386,16 @@ func (a *PostgresDBRepo) AtualizarAula(aula models.Aula) error {
 	}
 	return nil
 }
+
+func (a *PostgresDBRepo) DeleteAula(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `delete from aulas where id = $1`
+
+	_, err := a.DB.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}

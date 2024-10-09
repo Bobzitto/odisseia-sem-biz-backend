@@ -1,8 +1,10 @@
 package main
 
 import (
+	"backend/internal/graph"
 	"backend/internal/models"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -191,7 +193,7 @@ func (app *application) InserirAula(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid"})
 	}
 
-	var materiasID []int 
+	var materiasID []int
 	for _, materia := range aula.Materias {
 		materiasID = append(materiasID, materia.ID)
 	}
@@ -200,6 +202,7 @@ func (app *application) InserirAula(c echo.Context) error {
 	//materia
 	newID, err := app.DB.InserirAula(aula)
 	if err != nil {
+
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "problem making request"})
 	}
 
@@ -217,15 +220,26 @@ func (app *application) InserirAula(c echo.Context) error {
 }
 
 func (app *application) AtualizarAula(c echo.Context) error {
+	log.Printf("endpoint hit")
 	var payload models.Aula
 
-	err := c.Bind(payload)
+	err := c.Bind(&payload)
+	log.Printf("Attempting to fetch aula with ID: %d\n", payload.ID)
+
 	if err != nil {
+		log.Printf("bind error: %v/n", err)
+
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	var materiasID []int
+	for _, materia := range payload.Materias {
+		materiasID = append(materiasID, materia.ID)
 	}
 
 	aula, err := app.DB.UmaAula(payload.ID)
 	if err != nil {
+		log.Printf("db error: %v\n", err)
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
 	}
 
@@ -240,14 +254,54 @@ func (app *application) AtualizarAula(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
 	}
 
-	err = app.DB.AtualizarMateria(aula.ID, payload.MateriasArray)
+	err = app.DB.AtualizarMateria(aula.ID, materiasID)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
 	}
 
 	resp := JSONResponse{
 		Error:   false,
-		Message: "movie updated",
+		Message: "aula atualizada",
 	}
 	return c.JSON(http.StatusAccepted, resp)
+}
+
+func (app *application) DeletarAula(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	err = app.DB.DeleteAula(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	resp := JSONResponse{
+		Error:   false,
+		Message: "movie deleted",
+	}
+
+	return c.JSON(http.StatusAccepted, resp)
+}
+
+func (app *application) AulasGraphQL(c echo.Context) error {
+	//need to populate graph type with aulas
+	aulas, _ := app.DB.TodaAula()
+
+	//get query from request
+	q, _ := io.ReadAll(c.Request().Body)
+	query := string(q)
+	//create new variable of type *graph.graph
+	g := graph.New(aulas)
+	//set query string on the variable
+	g.QueryString = query
+	//perform query
+	resp, err := g.Query()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "error"})
+	}
+	//send response
+
+	return c.JSON(http.StatusOK, resp)
 }

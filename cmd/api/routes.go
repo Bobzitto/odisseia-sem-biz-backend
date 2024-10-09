@@ -20,14 +20,16 @@ func (app *application) routes() *echo.Echo {
 	e.POST("/authenticate", app.authenticate)
 	e.GET("/refresh", app.refreshToken)
 	e.GET("/materias", app.TodasMaterias)
+	e.POST("/graph", app.AulasGraphQL)
 
 	// Protected routes group
 	protected := e.Group("/home")
 	protected.Use(app.AuthRequired)
 	protected.GET("/aulas", app.TodasAulas)
 	protected.PUT("/aulas/0", app.InserirAula)
-	protected.PATCH("/aulas/{id}", app.AtualizarAula)
+	protected.PATCH("/aulas/:id", app.AtualizarAula)
 	protected.GET("/aulas/{id}", app.EditarAula)
+	protected.DELETE("/aulas/:id", app.DeletarAula)
 
 	return e
 }
