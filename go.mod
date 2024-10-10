@@ -1,6 +1,6 @@
 module backend
 
-go 1.23.1
+go 1.23.0
 
 require encore.dev v1.37.0
 
