@@ -305,3 +305,122 @@ func (app *application) AulasGraphQL(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, resp)
 }
+
+//todas as turmas
+
+func (app *application) TodasTurmas(c echo.Context) error {
+	turmas, err := app.DB.TodaTurma()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "error fetching auals"})
+
+	}
+	return c.JSON(http.StatusOK, turmas)
+}
+
+//inserir turma
+
+func (app *application) InserirTurma(c echo.Context) error {
+	log.Println("inseriraula endpoint hit")
+	var turma models.Turma
+
+	err := c.Bind(&turma)
+	if err != nil {
+		log.Printf("bind error: %v\n", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid"})
+	}
+
+	newID, err := app.DB.InserirTurma(turma)
+	if err != nil {
+
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "problem making request"})
+	}
+
+	resp := JSONResponse{
+		Error:   false,
+		Message: "turma inserted successfully",
+		Data:    map[string]interface{}{"id": newID},
+	}
+
+	return c.JSON(http.StatusAccepted, resp)
+}
+
+// atualizar turma
+func (app *application) AtualizarTurma(c echo.Context) error {
+	log.Printf("endpoint hit")
+	var payload models.Turma
+
+	err := c.Bind(&payload)
+	log.Printf("Attempting to fetch aula with ID: %d\n", payload.ID)
+
+	if err != nil {
+		log.Printf("bind error: %v/n", err)
+
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	turma, err := app.DB.UmaTurma(payload.ID)
+	if err != nil {
+		log.Printf("db error: %v\n", err)
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	turma.Name = payload.Name
+	turma.School = payload.School
+	turma.Year = payload.Year
+	turma.UpdatedAt = time.Now()
+
+	err = app.DB.AtualizarTurma(*turma)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	resp := JSONResponse{
+		Error:   false,
+		Message: "turma atualizada",
+	}
+	return c.JSON(http.StatusAccepted, resp)
+}
+
+//editar turma
+
+func (app *application) EditarTurma(c echo.Context) error {
+	id := c.Param("id")
+
+	turmaID, err := strconv.Atoi(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "ID de aula invalido"})
+	}
+
+	turma, err := app.DB.EditarUmaTurma(turmaID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	var payload = struct {
+		Turma *models.Turma `json:"turma"`
+	}{
+		turma,
+	}
+
+	return c.JSON(http.StatusOK, payload)
+}
+
+// deletar turma
+func (app *application) DeletarTurma(c echo.Context) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	err = app.DB.DeleteTurma(id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad request"})
+	}
+
+	resp := JSONResponse{
+		Error:   false,
+		Message: "turma deleted",
+	}
+
+	return c.JSON(http.StatusAccepted, resp)
+}

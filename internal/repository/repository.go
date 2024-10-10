@@ -17,4 +17,12 @@ type DatabaseRepo interface {
 	AtualizarMateria(id int, materiasID []int) error
 	AtualizarAula(aula models.Aula) error
 	DeleteAula(id int) error
+
+	//turmas
+	UmaTurma(id int) (*models.Turma, error)
+	TodaTurma() ([]*models.Turma, error)
+	InserirTurma(turma models.Turma) (int, error)
+	AtualizarTurma(turma models.Turma) error
+	EditarUmaTurma(id int) (*models.Turma, error)
+	DeleteTurma(id int) error
 }

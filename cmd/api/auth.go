@@ -90,7 +90,7 @@ func (j *Auth) GetRefreshCookie(refreshToken string) *http.Cookie {
 		MaxAge:   int(j.RefreshExpiry.Seconds()),
 		SameSite: http.SameSiteLaxMode,
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   true,
 	}
 }
 
@@ -103,7 +103,7 @@ func (j *Auth) GetExpiredRefreshCookie() *http.Cookie {
 		MaxAge:   -1,
 		SameSite: http.SameSiteLaxMode,
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   true,
 	}
 }
 

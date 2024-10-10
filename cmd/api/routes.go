@@ -16,7 +16,7 @@ func (app *application) routes() *echo.Echo {
 
 	// Use CORS middleware (or any other custom middleware)
 
-	// Unprotected route
+	// Unprotected route	
 	e.POST("/authenticate", app.authenticate)
 	e.GET("/refresh", app.refreshToken)
 	e.GET("/materias", app.TodasMaterias)
@@ -30,6 +30,14 @@ func (app *application) routes() *echo.Echo {
 	protected.PATCH("/aulas/:id", app.AtualizarAula)
 	protected.GET("/aulas/{id}", app.EditarAula)
 	protected.DELETE("/aulas/:id", app.DeletarAula)
+
+	//turmas
+
+	protected.GET("/turmas", app.TodasTurmas)
+	protected.PUT("/turmas/0", app.InserirTurma)
+	protected.PATCH("/turmas/:id", app.AtualizarTurma)
+	protected.GET("/turmas/:id", app.EditarTurma)
+	protected.DELETE("/turmas/:id", app.DeletarTurma)
 
 	return e
 }

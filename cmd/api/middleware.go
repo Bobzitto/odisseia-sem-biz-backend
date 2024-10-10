@@ -2,14 +2,24 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
 
 func SetupMiddleware(e *echo.Echo) {
+	allowOrigins := os.Getenv("ALLOW_ORIGINS")
+	if allowOrigins == "" {
+		allowOrigins = "http://localhost:3000" // Default for local development
+	}
+
+	// Split the origins into a slice
+	origins := strings.Split(allowOrigins, ",")
+
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"http://example.com", "http://localhost:3000"},
+		AllowOrigins:     origins,
 		AllowMethods:     []string{echo.GET, echo.POST, echo.PUT, echo.DELETE, echo.PATCH},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 		ExposeHeaders:    []string{"Authorization"},

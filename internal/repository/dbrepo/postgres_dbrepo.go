@@ -399,3 +399,175 @@ func (a *PostgresDBRepo) DeleteAula(id int) error {
 	}
 	return nil
 }
+
+// uma turma
+func (t *PostgresDBRepo) UmaTurma(id int) (*models.Turma, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+		select
+			id, name, school, year, created_at, updated_at
+		from
+			turmas
+		where id = $1`
+
+	row := t.DB.QueryRowContext(ctx, query, id)
+
+	var turma models.Turma
+
+	err := row.Scan(
+		&turma.ID,
+		&turma.Name,
+		&turma.School,
+		&turma.Year,
+		&turma.CreatedAt,
+		&turma.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &turma, err
+
+}
+
+//Todas as turmas
+
+func (t *PostgresDBRepo) TodaTurma() ([]*models.Turma, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+		select
+			id, name, school, year, created_at, updated_at
+		from
+			turmas
+		order by
+			name
+	`
+	rows, err := t.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var turmas []*models.Turma
+
+	for rows.Next() {
+		var turma models.Turma
+
+		err := rows.Scan(
+			&turma.ID,
+			&turma.Name,
+			&turma.School,
+			&turma.Year,
+			&turma.CreatedAt,
+			&turma.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Append the scanned turma to the slice
+		turmas = append(turmas, &turma)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return turmas, nil
+}
+
+// Inserir uma turma
+func (t *PostgresDBRepo) InserirTurma(turma models.Turma) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `insert into turmas (name, school, year, created_at, updated_at)
+		values ($1, $2, $3, $4, $5) returning id`
+
+	var newID int
+
+	err := t.DB.QueryRowContext(ctx, stmt,
+		turma.Name,
+		turma.School,
+		turma.Year,
+		turma.CreatedAt,
+		turma.UpdatedAt,
+	).Scan(&newID)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return newID, nil
+}
+
+// Atualizar uma turma
+func (t *PostgresDBRepo) AtualizarTurma(turma models.Turma) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `update turma set name = $1, school = $2, year = $3,
+		 updated_at = $4 where id = $5`
+
+	_, err := t.DB.ExecContext(ctx, stmt,
+		turma.Name,
+		turma.School,
+		turma.Year,
+		turma.UpdatedAt,
+		turma.ID,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// editar uma aula
+
+func (t *PostgresDBRepo) EditarUmaTurma(id int) (*models.Turma, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	query := `
+		select
+			id, name, school, year, created_at, updated_at
+		from
+			turmas
+		where id = $1`
+
+	row := t.DB.QueryRowContext(ctx, query, id)
+
+	var turma models.Turma
+
+	err := row.Scan(
+		&turma.ID,
+		&turma.School,
+		&turma.Year,
+		&turma.CreatedAt,
+		&turma.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &turma, err
+}
+
+//Deletar uma turma
+
+func (t *PostgresDBRepo) DeleteTurma(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+	defer cancel()
+
+	stmt := `delete from turmas where id = $1`
+
+	_, err := t.DB.ExecContext(ctx, stmt, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
