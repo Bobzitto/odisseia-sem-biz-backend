@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -14,7 +13,7 @@ import (
 
 func runMigration(db *sql.DB) error {
 	// Read the SQL file
-	data, err := ioutil.ReadFile("create_tables.sql")
+	data, err := os.ReadFile("sql/create_tables.sql")
 	if err != nil {
 		return err
 	}
@@ -49,7 +48,7 @@ func (app *application) connectToDB() (*sql.DB, error) {
 	dbname := os.Getenv("DB_NAME")
 
 	// Construct the Data Source Name (DSN)
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", 
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
 	connection, err := openDB(dsn)
