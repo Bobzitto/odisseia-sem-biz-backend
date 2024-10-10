@@ -13,7 +13,7 @@ import (
 
 func runMigration(db *sql.DB) error {
 	// Read the SQL file
-	data, err := os.ReadFile("sql/create_tables.sql")
+	data, err := os.ReadFile("../sql/create_tables.sql")
 	if err != nil {
 		return err
 	}
