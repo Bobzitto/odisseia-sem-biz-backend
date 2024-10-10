@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -10,6 +11,18 @@ import (
 	_ "github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
+
+func runMigration(db *sql.DB) error {
+	// Read the SQL file
+	data, err := ioutil.ReadFile("create_tables.sql")
+	if err != nil {
+		return err
+	}
+
+	// Execute the SQL commands
+	_, err = db.Exec(string(data))
+	return err
+}
 
 // openDB initializes a connection to the database using the provided DSN.
 func openDB(dsn string) (*sql.DB, error) {
@@ -41,6 +54,10 @@ func (app *application) connectToDB() (*sql.DB, error) {
 
 	connection, err := openDB(dsn)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := runMigration(connection); err != nil {
 		return nil, err
 	}
 
